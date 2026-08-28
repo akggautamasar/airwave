@@ -160,6 +160,10 @@ export const LIMITS = {
   chatHistory: 120,
   /** Messages retained per IP thread in IP Chat. */
   ipChatHistory: 200,
+  /** Optional shared secret paired with an IP pair, for people who want a
+   * thread not findable by others who share their public address. */
+  ipChatPassphraseMin: 4,
+  ipChatPassphraseMax: 64,
 } as const;
 
 /* -------------------------------------------------------------------------- */
@@ -167,25 +171,34 @@ export const LIMITS = {
 /* -------------------------------------------------------------------------- */
 
 /**
- * No login, no room code — the address a request arrives from IS the
- * identity. Anyone who has your IP can read and post into your thread;
- * anyone sharing your IP (same office, same carrier NAT) reads and posts
- * into it too. This is a novelty feature, not a private channel — the /ipchat
- * page explains that plainly rather than implying any real privacy.
+ * A thread is identified by the pair of IP addresses talking to each other
+ * (order doesn't matter — whoever connects first, the same pair produces
+ * the same thread) plus an optional passphrase. The passphrase isn't
+ * required: two ordinary IPs are already a fairly narrow pairing. It's
+ * there for when either side wants extra separation — e.g. two people who
+ * happen to share a public IP with others on the same network and want a
+ * thread only they can find.
  */
 export interface IpChatMessage {
   id: string;
   text: string;
   ts: number;
+  /** The IP address that sent this message, so the UI can tell "me" from "them". */
+  fromIp: string;
 }
 
 export interface IpChatSendBody {
+  targetIp: string;
   text: string;
+  /** Optional. Omit or send '' for no passphrase. */
+  passphrase?: string;
 }
 
-/** Returned by both GET (read a thread) and POST (send to your own thread). */
+/** Returned by both GET (read a conversation) and POST (send a message). */
 export interface IpChatThreadResponse {
-  ip: string;
+  /** Your own IP, as seen by the server for this request — compare against
+   * a message's `fromIp` to know which side sent it. */
+  youAreIp: string;
   messages: IpChatMessage[];
 }
 

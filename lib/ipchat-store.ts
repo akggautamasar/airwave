@@ -1,18 +1,17 @@
 /**
- * A minimal inbox keyed by public IP address, for the "IP Chat" feature.
+ * A minimal in-memory inbox for the "IP Chat" feature, keyed by the pair of
+ * IP addresses talking to each other plus an optional passphrase.
  *
- * There is no login here at all — the address a request arrives from *is*
- * the identity. That is the whole feature (anyone who has your IP can read
- * and post into your thread, no join code needed) and also the whole caveat
- * (anyone who *shares* your IP — the rest of your office wifi, your phone
- * carrier's NAT — reads and posts into it too). The /ipchat page explains
- * this to users rather than implying any real privacy.
+ * The pair is sorted before hashing, so it doesn't matter who "connects"
+ * first — Alice entering Bob's IP and Bob entering Alice's IP land in the
+ * same thread. See `deriveConversationKey` below.
  *
  * Same storage model as the rest of the app: one process, nothing persisted,
  * held on globalThis so dev hot-reloads don't wipe it. See lib/store.ts for
  * why that constraint exists.
  */
 
+import { createHash } from 'node:crypto';
 import { LIMITS } from './types';
 import type { IpChatMessage } from './types';
 
@@ -42,25 +41,37 @@ function state(): IpChatState {
   return existing;
 }
 
-export function readThread(ip: string): IpChatMessage[] {
+/**
+ * The actual map key: the two addresses sorted (order-independent) plus the
+ * passphrase (may be ''), hashed together. Hashing rather than storing the
+ * raw string means the passphrase never sits in memory as a plain,
+ * greppable map key, and normalises the varying shapes of IPv4/IPv6/zone-id
+ * strings into something fixed-width.
+ */
+export function deriveConversationKey(ipA: string, ipB: string, passphrase: string): string {
+  const [first, second] = [ipA, ipB].sort();
+  return createHash('sha256').update(`${first}\u241F${second}\u241F${passphrase}`).digest('hex');
+}
+
+export function readThread(key: string): IpChatMessage[] {
   const { threads } = state();
-  const thread = threads.get(ip);
+  const thread = threads.get(key);
   if (!thread) return [];
   if (Date.now() - thread.lastActiveAt > IDLE_GRACE_MS) {
-    threads.delete(ip);
+    threads.delete(key);
     return [];
   }
   return thread.messages;
 }
 
-/** Appends a message to the sender's own thread and returns the full thread. */
-export function pushThread(ip: string, message: IpChatMessage): IpChatMessage[] {
+/** Appends a message to a thread and returns the full thread. */
+export function pushThread(key: string, message: IpChatMessage): IpChatMessage[] {
   const { threads } = state();
-  let thread = threads.get(ip);
+  let thread = threads.get(key);
   if (!thread) {
     if (threads.size >= MAX_THREADS) evictStalest();
     thread = { messages: [], lastActiveAt: Date.now() };
-    threads.set(ip, thread);
+    threads.set(key, thread);
   }
   thread.messages.push(message);
   thread.lastActiveAt = Date.now();

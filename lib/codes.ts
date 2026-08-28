@@ -138,6 +138,20 @@ export function cleanChatText(raw: unknown): string | null {
   return text.length >= 1 ? text : null;
 }
 
+/**
+ * An optional shared secret for IP Chat — not a login, just extra
+ * separation for people who want it. Empty/absent is valid (no passphrase);
+ * anything non-empty must meet the length bounds, so a stray space or a
+ * one-character typo doesn't silently create a different, wrong thread.
+ */
+export function cleanOptionalPassphrase(raw: unknown): string | null {
+  if (raw === undefined || raw === null) return '';
+  if (typeof raw !== 'string') return null;
+  const value = clean(raw, LIMITS.ipChatPassphraseMax);
+  if (value.length === 0) return '';
+  return value.length >= LIMITS.ipChatPassphraseMin ? value : null;
+}
+
 export function cleanDeviceId(raw: unknown): string {
   if (typeof raw !== 'string') return 'unknown';
   const id = raw.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64);

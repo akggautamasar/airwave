@@ -82,11 +82,13 @@ export const moderate = (code: string, body: ModerateBody) =>
 
 export const myIp = () => request<MyIpResponse>('/api/ipchat/me');
 
-export const readIpThread = (ip: string) =>
-  request<IpChatThreadResponse>(`/api/ipchat?ip=${encodeURIComponent(ip)}`);
+export const readIpThread = (targetIp: string, passphrase: string) =>
+  request<IpChatThreadResponse>(
+    `/api/ipchat?targetIp=${encodeURIComponent(targetIp)}&passphrase=${encodeURIComponent(passphrase)}`,
+  );
 
-export const sendIpChat = (text: string) =>
+export const sendIpChat = (targetIp: string, text: string, passphrase: string) =>
   request<IpChatThreadResponse>('/api/ipchat', {
     method: 'POST',
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ targetIp, text, passphrase }),
   });
