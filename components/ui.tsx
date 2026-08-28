@@ -159,11 +159,22 @@ interface SheetProps {
 export function Sheet({ open, title, onClose, children }: SheetProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
 
+  // Keep a live ref to onClose so the effect below never needs it in its
+  // dependency array. Callers often pass an inline `() => setX(false)`,
+  // which is a new function identity on every render; if that identity
+  // were a dependency, this effect would re-run on every parent re-render
+  // (e.g. while a live audio-level meter is ticking) and re-steal focus
+  // away from whatever the user just tapped inside the sheet, including
+  // the chat input — which is what caused the mobile keyboard to open and
+  // then close almost instantly.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     if (!open) return;
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onCloseRef.current();
     };
     document.addEventListener('keydown', onKey);
 
@@ -171,6 +182,8 @@ export function Sheet({ open, title, onClose, children }: SheetProps) {
     document.body.style.overflow = 'hidden';
 
     // Move focus into the sheet so keyboard and screen reader users land here.
+    // This should only happen once, when the sheet transitions open — not on
+    // every re-render while it stays open.
     const focusable = panelRef.current?.querySelector<HTMLElement>(
       'input, button, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
@@ -180,7 +193,8 @@ export function Sheet({ open, title, onClose, children }: SheetProps) {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = previousOverflow;
     };
-  }, [open, onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   if (!open) return null;
 
