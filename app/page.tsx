@@ -99,7 +99,16 @@ export default function LobbyPage() {
               <p className="text-xs text-faint">No accounts. Nothing saved. Just talk.</p>
             </div>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => router.push('/ipchat')}
+              className="text-xs text-faint hover:text-dim"
+            >
+              IP Chat
+            </button>
+            <ThemeToggle />
+          </div>
         </header>
 
         <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
