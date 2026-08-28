@@ -158,7 +158,40 @@ export const LIMITS = {
   passwordMax: 64,
   /** Messages retained per channel for people who join late. */
   chatHistory: 120,
+  /** Messages retained per IP thread in IP Chat. */
+  ipChatHistory: 200,
 } as const;
+
+/* -------------------------------------------------------------------------- */
+/* IP Chat                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * No login, no room code — the address a request arrives from IS the
+ * identity. Anyone who has your IP can read and post into your thread;
+ * anyone sharing your IP (same office, same carrier NAT) reads and posts
+ * into it too. This is a novelty feature, not a private channel — the /ipchat
+ * page explains that plainly rather than implying any real privacy.
+ */
+export interface IpChatMessage {
+  id: string;
+  text: string;
+  ts: number;
+}
+
+export interface IpChatSendBody {
+  text: string;
+}
+
+/** Returned by both GET (read a thread) and POST (send to your own thread). */
+export interface IpChatThreadResponse {
+  ip: string;
+  messages: IpChatMessage[];
+}
+
+export interface MyIpResponse {
+  ip: string;
+}
 
 export const MODE_LABEL: Record<RoomMode, string> = {
   broadcast: 'Broadcast',

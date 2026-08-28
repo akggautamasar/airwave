@@ -4,8 +4,10 @@ import type {
   ApiErrorCode,
   ApiErrorResponse,
   CreateRoomBody,
+  IpChatThreadResponse,
   JoinRoomBody,
   ModerateBody,
+  MyIpResponse,
   OkResponse,
   RoomListResponse,
   RoomPeekResponse,
@@ -74,4 +76,17 @@ export const moderate = (code: string, body: ModerateBody) =>
   request<OkResponse>(`/api/rooms/${encodeURIComponent(code)}/moderate`, {
     method: 'POST',
     body: JSON.stringify(body),
+  });
+
+/* ---------------------------------------------------------------- IP Chat --- */
+
+export const myIp = () => request<MyIpResponse>('/api/ipchat/me');
+
+export const readIpThread = (ip: string) =>
+  request<IpChatThreadResponse>(`/api/ipchat?ip=${encodeURIComponent(ip)}`);
+
+export const sendIpChat = (text: string) =>
+  request<IpChatThreadResponse>('/api/ipchat', {
+    method: 'POST',
+    body: JSON.stringify({ text }),
   });
