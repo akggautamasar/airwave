@@ -77,7 +77,7 @@ export async function POST(req: Request, ctx: Ctx): Promise<Response> {
         );
       }
       const attempt = typeof body.password === 'string' ? body.password : '';
-      if (!attempt || !verifyPassword(attempt, record)) {
+      if (!attempt || !verifyPassword(attempt, { salt: record.pwSalt, hash: record.pwHash })) {
         return fail('bad_password', "That password didn't match.");
       }
     }
