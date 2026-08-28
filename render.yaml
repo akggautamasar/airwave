@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: airwave
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    # Room state (titles, passwords, chat scrollback) lives in process memory —
+    # see lib/store.ts. Two instances would each hold half the channels and
+    # disagree about passwords, so this MUST stay at 1.
+    numInstances: 1
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      - key: LIVEKIT_EMPTY_TIMEOUT
+        value: '120'
+      - key: MAX_PARTICIPANTS
+        value: '100'
