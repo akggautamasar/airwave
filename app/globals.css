@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Tokens — one instrument, two lighting conditions.
+   Values are space-separated RGB triplets so Tailwind alpha modifiers work.
+   ========================================================================== */
+
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --surface-0: 11 16 20; /* #0B1014 petrol black */
+  --surface-1: 18 26 32; /* #121A20 panel */
+  --surface-2: 26 36 44; /* #1A242C raised */
+  --line: 38 52 64; /* #263440 */
+
+  --ink: 230 238 242; /* #E6EEF2 bone */
+  --ink-dim: 140 160 173; /* #8CA0AD */
+  --ink-faint: 91 112 126; /* #5B707E */
+
+  --signal: 232 163 61; /* #E8A33D oxidized brass — "on air" */
+  --signal-deep: 184 122 28; /* #B87A1C */
+  --on-signal: 22 16 10; /* text sitting on brass */
+
+  --carrier: 79 179 165; /* #4FB3A5 calm teal — subscribed/listening */
+  --alert: 226 112 92; /* #E2705C dusty coral — destructive */
+
+  --key-edge: 12 18 23;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --surface-0: 233 237 240; /* #E9EDF0 cool porcelain */
+  --surface-1: 246 248 250; /* #F6F8FA */
+  --surface-2: 255 255 255;
+  --line: 203 213 220; /* #CBD5DC */
+
+  --ink: 16 24 30; /* #10181E same petrol ink */
+  --ink-dim: 74 93 105; /* #4A5D69 */
+  --ink-faint: 117 134 143; /* #75868F */
+
+  --signal: 168 104 27; /* #A8681B bronze — darkened for contrast */
+  --signal-deep: 124 74 15; /* #7C4A0F */
+  --on-signal: 255 248 239;
+
+  --carrier: 30 127 115; /* #1E7F73 */
+  --alert: 178 63 42; /* #B23F2A */
+
+  --key-edge: 186 197 205;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    /* Kills the 300ms double-tap zoom delay without disabling pinch zoom. */
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-base text-ink font-sans antialiased;
+    /* Stops iOS pull-to-refresh firing while a finger is held on push-to-talk. */
+    overscroll-behavior-y: none;
+  }
+
+  /* Instrument labelling: condensed, caps, tracked out. */
+  .label {
+    @apply font-display uppercase tracking-label;
+  }
+
+  /* Numerals, channel codes, timestamps — anything that reads as data. */
+  .readout {
+    @apply font-mono tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--carrier));
+    outline-offset: 2px;
+  }
+
+  /* Inputs inherit the panel palette rather than the UA default. */
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-faint;
+  }
+
+  /* iOS zooms the viewport when a focused input is under 16px. */
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1rem);
+  }
+}
+
+/* ==========================================================================
+   Primitives
+   ========================================================================== */
+
+@layer components {
+  /* Safe-area aware bottom dock, for the control bar and mobile sheets. */
+  .dock-pad {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+  }
+
+  .top-pad {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Push-to-talk needs a finger held down without the browser interpreting it
+     as a scroll, a text selection, or a long-press context menu. */
+  .ptt-surface {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .hairline {
+    @apply border-line;
+  }
+
+  /* Thin, unobtrusive scrollbars for the chat and people columns. */
+  .thin-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line)) transparent;
+  }
+  .thin-scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .thin-scroll::-webkit-scrollbar-thumb {
+    background: rgb(var(--line));
+    border-radius: 3px;
+  }
+  .thin-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer utilities {
+  /* Full viewport height that accounts for mobile browser chrome. */
+  .h-screen-dvh {
+    height: 100vh;
+    height: 100dvh;
+  }
+  .min-h-screen-dvh {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
